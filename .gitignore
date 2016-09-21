@@ -1,7 +1,3 @@
 packages/
-Entity/obj/
-Entity/bin/
-Model.Common/obj/
-Model.Common/bin/
-Model.Common.Test/obj/
-Model.Common.Test/bin/
+bin/
+obj/
