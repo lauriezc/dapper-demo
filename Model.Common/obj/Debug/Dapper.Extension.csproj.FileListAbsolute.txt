@@ -1,7 +1,0 @@
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\bin\Debug\Dapper.Extension.dll
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\bin\Debug\Dapper.Extension.pdb
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\obj\Debug\Dapper.Extension.dll
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\obj\Debug\Dapper.Extension.pdb
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\bin\Debug\Dapper.Extension.dll.config
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\bin\Debug\MySql.Data.dll
-\\Mac\Home\WorkSpace\ASP.NET\dapper-test\dapper-test\Dapper.Extension\obj\Debug\Dapper.Extension.csprojResolveAssemblyReference.cache
