@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataType.cs" />
     <Compile Include="Entity\Column.cs" />
+    <Compile Include="Entity\DataBase.cs" />
     <Compile Include="Entity\DbMethod.cs" />
     <Compile Include="Entity\Table.cs" />
     <Compile Include="IDataStructure.cs" />

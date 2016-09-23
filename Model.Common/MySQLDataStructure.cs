@@ -12,28 +12,33 @@ namespace Model.Common
 {
     public class MySQLDataStructure : IDataStructure
     {
-        private string _tableSQL = "SELECT c.`TABLE_SCHEMA`,c.`TABLE_NAME`,c.`COLUMN_NAME`,c.`ORDINAL_POSITION`,c.`COLUMN_DEFAULT`,c.`IS_NULLABLE`,c.`DATA_TYPE`,c.`CHARACTER_MAXIMUM_LENGTH`,c.`CHARACTER_OCTET_LENGTH`,c.`NUMERIC_PRECISION`,c.`NUMERIC_SCALE`,c.`DATETIME_PRECISION`,c.`CHARACTER_SET_NAME`,c.`COLUMN_TYPE`,c.`COLUMN_KEY`,c.`EXTRA` from (SELECT  `TABLE_SCHEMA`,`TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA`='Dapper-test' UNION SELECT `TABLE_SCHEMA`,`TABLE_NAME` FROM information_schema.VIEWS WHERE `TABLE_SCHEMA`='Dapper-test') tv LEFT JOIN information_schema.`COLUMNS` c ON tv.TABLE_NAME=c.TABLE_NAME";
+        private string _connectionString { get; set; }
+        public MySQLDataStructure(string connectionString)
+        {
+            this._connectionString = connectionString;
+        }
+        private string _tableSQL = "SELECT c.`TABLE_SCHEMA`,c.`TABLE_NAME`,c.`COLUMN_NAME`,c.`ORDINAL_POSITION`,c.`COLUMN_DEFAULT`,c.`IS_NULLABLE`,c.`DATA_TYPE`,c.`CHARACTER_MAXIMUM_LENGTH`,c.`CHARACTER_OCTET_LENGTH`,c.`NUMERIC_PRECISION`,c.`NUMERIC_SCALE`,c.`DATETIME_PRECISION`,c.`CHARACTER_SET_NAME`,c.`COLUMN_TYPE`,c.`COLUMN_KEY`,c.`EXTRA` from (SELECT  `TABLE_SCHEMA`,`TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA`='{0}' UNION SELECT `TABLE_SCHEMA`,`TABLE_NAME` FROM information_schema.VIEWS WHERE `TABLE_SCHEMA`='{0}') tv LEFT JOIN information_schema.`COLUMNS` c ON tv.TABLE_NAME=c.TABLE_NAME";
         private string _procedureSQL = "SELECT `SPECIFIC_SCHEMA`,`SPECIFIC_NAME`,`ORDINAL_POSITION`,`PARAMETER_MODE`,`PARAMETER_NAME`,`DATA_TYPE`,`CHARACTER_MAXIMUM_LENGTH`,`CHARACTER_OCTET_LENGTH`,`NUMERIC_PRECISION`,`NUMERIC_SCALE`,`DATETIME_PRECISION`,`CHARACTER_SET_NAME`,`DTD_IDENTIFIER`,`ROUTINE_TYPE` FROM information_schema.PARAMETERS WHERE SPECIFIC_SCHEMA='DAPPER-TEST';";
 
 
-        public List<Table> GetTables()
+        public List<Table> GetTables(string database)
         {
             List<Table> tbList = new List<Table>();
-            using (MySqlConnection con = new MySqlConnection(ConfigurationManager.AppSettings["MYSQL_CONNECTION"]))
+            using (MySqlConnection con = new MySqlConnection(this._connectionString))
             {
                 con.Open();
                 var cmd = con.CreateCommand();
-                cmd.CommandText = _tableSQL;
+                cmd.CommandText = string.Format(_tableSQL,database);
                 var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    var database = reader["TABLE_SCHEMA"].ToString();
+                    var db = reader["TABLE_SCHEMA"].ToString();
                     var tableName = reader["TABLE_NAME"].ToString();
-                    Table tb = tbList.FirstOrDefault(m => m.DatabaseName == database && m.TableName == tableName);
+                    Table tb = tbList.FirstOrDefault(m => m.DatabaseName == db && m.TableName == tableName);
                     if (tb == null)
                     {
                         tb = new Table();
-                        tb.DatabaseName = database;
+                        tb.DatabaseName = db;
                         tb.TableName = tableName;
                         tb.Columns = new List<Column>();
                         tbList.Add(tb);

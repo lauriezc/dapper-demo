@@ -9,7 +9,7 @@ namespace Model.Common
 {
     public interface IDataStructure
     {
-        List<Table> GetTables();
+        List<Table> GetTables(string database);
         List<DbMethod> GetMethods();
         List<Parameter> GetParameters();
     }
