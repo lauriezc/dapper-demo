@@ -68,7 +68,8 @@ namespace Model.Common.Test
         [TestMethod]
         public void TestGetModelByPrimary()
         {
-            var test = TestExten.GetModel(24);
+            var data = TestExten.GetModel("1=1", "id");
+            var test = TestExten.GetModel(data.id);
             Assert.IsNotNull(test);
         }
 
@@ -110,6 +111,26 @@ namespace Model.Common.Test
             var list = TestExten.GetList("1=1").Take(2).ToList();
             var row = TestExten.Delete(list.Select(m=>m.id).ToArray());
             Assert.AreEqual(list.Count, row);
+        }
+
+        [TestMethod]
+        public void TestPageList()
+        {
+            var index = 2;
+            var size = 3;
+            var list = TestExten.GetPageList(2, size);
+            var tarlist = TestExten.GetList("1=1").OrderByDescending(m => m.id).Skip((index-1)*size).Take(size).ToList();
+            bool valid = true;
+            var actual = list.Data as List<Entity.dapper_test.Test>;
+            for (var i=0;i< actual.Count;i++)
+            {
+
+                if(!tarlist[i].id.Equals(actual[i].id))
+                {
+                    valid = false;
+                }
+            }
+            Assert.IsTrue(valid);
         }
     }
 

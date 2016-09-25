@@ -12,6 +12,14 @@ namespace Entity.dapper_test
 	using MySql.Data.MySqlClient;
 	using Dapper;
 	
+	public class Pager
+	{
+		public int PageIndex { get; set; }
+		public int PageSize { get; set; }
+		public int Total { get; set; }
+		public int PageCount { get { return (int)Math.Ceiling((double)Total/(double)PageSize); } }
+		public object Data { get; set; }
+	}
 	public class Test
 	{
 		#region property
@@ -281,6 +289,34 @@ namespace Entity.dapper_test
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `dapper-test`.`Test` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<Test>(sql).AsList<Test>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class all_test
 	{
@@ -369,6 +405,429 @@ namespace Entity.dapper_test
 		}
 
     }
+	public class datatype
+	{
+		#region property
+		private string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
+		public bool bit { get; set; }
+		public sbyte tinyint { get; set; }
+		public short smallint { get; set; }
+		public int mediumint { get; set; }
+		public int @int { get; set; }
+		public int integer { get; set; }
+		public long bigint { get; set; }
+		public double real { get; set; }
+		public double @double { get; set; }
+		public float @float { get; set; }
+		public decimal @decimal { get; set; }
+		public decimal numeric { get; set; }
+		public string @char { get; set; }
+		public string varchar { get; set; }
+		public byte[] binary { get; set; }
+		public byte[] varbinary { get; set; }
+		public DateTime date { get; set; }
+		public TimeSpan time { get; set; }
+		public DateTime datetime { get; set; }
+		public DateTime timestamp { get; set; }
+		public short year { get; set; }
+		public byte[] tinyblob { get; set; }
+		public byte[] blob { get; set; }
+		public byte[] mediumblob { get; set; }
+		public byte[] longblob { get; set; }
+		public string tinytext { get; set; }
+		public string text { get; set; }
+		public string mediumtext { get; set; }
+		#endregion property
+		
+	}
+	public static class datatypeExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
+		
+		public static int Insert(this datatype entity)
+		{
+			string sql="INSERT INTO `dapper-test`.`datatype` (bit,smallint,mediumint,int,integer,bigint,real,double,float,decimal,numeric,char,varchar,binary,varbinary,date,time,datetime,timestamp,year,tinyblob,blob,mediumblob,longblob,tinytext,text,mediumtext)VALUES(@bit,@smallint,@mediumint,@int,@integer,@bigint,@real,@double,@float,@decimal,@numeric,@char,@varchar,@binary,@varbinary,@date,@time,@datetime,@timestamp,@year,@tinyblob,@blob,@mediumblob,@longblob,@tinytext,@text,@mediumtext);";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@bit", entity.bit);
+				para.Add("@smallint", entity.smallint);
+				para.Add("@mediumint", entity.mediumint);
+				para.Add("@int", entity.@int);
+				para.Add("@integer", entity.integer);
+				para.Add("@bigint", entity.bigint);
+				para.Add("@real", entity.real);
+				para.Add("@double", entity.@double);
+				para.Add("@float", entity.@float);
+				para.Add("@decimal", entity.@decimal);
+				para.Add("@numeric", entity.numeric);
+				para.Add("@char", entity.@char);
+				para.Add("@varchar", entity.varchar);
+				para.Add("@binary", entity.binary);
+				para.Add("@varbinary", entity.varbinary);
+				para.Add("@date", entity.date);
+				para.Add("@time", entity.time);
+				para.Add("@datetime", entity.datetime);
+				para.Add("@timestamp", entity.timestamp);
+				para.Add("@year", entity.year);
+				para.Add("@tinyblob", entity.tinyblob);
+				para.Add("@blob", entity.blob);
+				para.Add("@mediumblob", entity.mediumblob);
+				para.Add("@longblob", entity.longblob);
+				para.Add("@tinytext", entity.tinytext);
+				para.Add("@text", entity.text);
+				para.Add("@mediumtext", entity.mediumtext);
+							
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Insert(this List<datatype> list)
+		{
+			string sql="INSERT INTO `dapper-test`.`datatype` (bit,smallint,mediumint,int,integer,bigint,real,double,float,decimal,numeric,char,varchar,binary,varbinary,date,time,datetime,timestamp,year,tinyblob,blob,mediumblob,longblob,tinytext,text,mediumtext)VALUES(@bit,@smallint,@mediumint,@int,@integer,@bigint,@real,@double,@float,@decimal,@numeric,@char,@varchar,@binary,@varbinary,@date,@time,@datetime,@timestamp,@year,@tinyblob,@blob,@mediumblob,@longblob,@tinytext,@text,@mediumtext);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@bit", list[p].bit);
+					para[p].Add("@smallint", list[p].smallint);
+					para[p].Add("@mediumint", list[p].mediumint);
+					para[p].Add("@int", list[p].@int);
+					para[p].Add("@integer", list[p].integer);
+					para[p].Add("@bigint", list[p].bigint);
+					para[p].Add("@real", list[p].real);
+					para[p].Add("@double", list[p].@double);
+					para[p].Add("@float", list[p].@float);
+					para[p].Add("@decimal", list[p].@decimal);
+					para[p].Add("@numeric", list[p].numeric);
+					para[p].Add("@char", list[p].@char);
+					para[p].Add("@varchar", list[p].varchar);
+					para[p].Add("@binary", list[p].binary);
+					para[p].Add("@varbinary", list[p].varbinary);
+					para[p].Add("@date", list[p].date);
+					para[p].Add("@time", list[p].time);
+					para[p].Add("@datetime", list[p].datetime);
+					para[p].Add("@timestamp", list[p].timestamp);
+					para[p].Add("@year", list[p].year);
+					para[p].Add("@tinyblob", list[p].tinyblob);
+					para[p].Add("@blob", list[p].blob);
+					para[p].Add("@mediumblob", list[p].mediumblob);
+					para[p].Add("@longblob", list[p].longblob);
+					para[p].Add("@tinytext", list[p].tinytext);
+					para[p].Add("@text", list[p].text);
+					para[p].Add("@mediumtext", list[p].mediumtext);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static datatype GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<datatype>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this datatype entity)
+		{
+			string sql="UPDATE `dapper-test`.`datatype` SET bit=@bit,smallint=@smallint,mediumint=@mediumint,int=@int,integer=@integer,bigint=@bigint,real=@real,double=@double,float=@float,decimal=@decimal,numeric=@numeric,char=@char,varchar=@varchar,binary=@binary,varbinary=@varbinary,date=@date,time=@time,datetime=@datetime,timestamp=@timestamp,year=@year,tinyblob=@tinyblob,blob=@blob,mediumblob=@mediumblob,longblob=@longblob,tinytext=@tinytext,text=@text,mediumtext=@mediumtext WHERE tinyint=@tinyint;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@bit", entity.bit);
+				para.Add("@smallint", entity.smallint);
+				para.Add("@mediumint", entity.mediumint);
+				para.Add("@int", entity.@int);
+				para.Add("@integer", entity.integer);
+				para.Add("@bigint", entity.bigint);
+				para.Add("@real", entity.real);
+				para.Add("@double", entity.@double);
+				para.Add("@float", entity.@float);
+				para.Add("@decimal", entity.@decimal);
+				para.Add("@numeric", entity.numeric);
+				para.Add("@char", entity.@char);
+				para.Add("@varchar", entity.varchar);
+				para.Add("@binary", entity.binary);
+				para.Add("@varbinary", entity.varbinary);
+				para.Add("@date", entity.date);
+				para.Add("@time", entity.time);
+				para.Add("@datetime", entity.datetime);
+				para.Add("@timestamp", entity.timestamp);
+				para.Add("@year", entity.year);
+				para.Add("@tinyblob", entity.tinyblob);
+				para.Add("@blob", entity.blob);
+				para.Add("@mediumblob", entity.mediumblob);
+				para.Add("@longblob", entity.longblob);
+				para.Add("@tinytext", entity.tinytext);
+				para.Add("@text", entity.text);
+				para.Add("@mediumtext", entity.mediumtext);
+		
+			para.Add("@tinyint", entity.tinyint);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this datatype entity)
+		{
+			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@tinyint", entity.tinyint);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<datatype> list)
+		{
+			string sql="UPDATE `dapper-test`.`datatype` SET bit=@bit,smallint=@smallint,mediumint=@mediumint,int=@int,integer=@integer,bigint=@bigint,real=@real,double=@double,float=@float,decimal=@decimal,numeric=@numeric,char=@char,varchar=@varchar,binary=@binary,varbinary=@varbinary,date=@date,time=@time,datetime=@datetime,timestamp=@timestamp,year=@year,tinyblob=@tinyblob,blob=@blob,mediumblob=@mediumblob,longblob=@longblob,tinytext=@tinytext,text=@text,mediumtext=@mediumtext WHERE tinyint=@tinyint;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@bit", list[p].bit);
+				para[p].Add("@smallint", list[p].smallint);
+				para[p].Add("@mediumint", list[p].mediumint);
+				para[p].Add("@int", list[p].@int);
+				para[p].Add("@integer", list[p].integer);
+				para[p].Add("@bigint", list[p].bigint);
+				para[p].Add("@real", list[p].real);
+				para[p].Add("@double", list[p].@double);
+				para[p].Add("@float", list[p].@float);
+				para[p].Add("@decimal", list[p].@decimal);
+				para[p].Add("@numeric", list[p].numeric);
+				para[p].Add("@char", list[p].@char);
+				para[p].Add("@varchar", list[p].varchar);
+				para[p].Add("@binary", list[p].binary);
+				para[p].Add("@varbinary", list[p].varbinary);
+				para[p].Add("@date", list[p].date);
+				para[p].Add("@time", list[p].time);
+				para[p].Add("@datetime", list[p].datetime);
+				para[p].Add("@timestamp", list[p].timestamp);
+				para[p].Add("@year", list[p].year);
+				para[p].Add("@tinyblob", list[p].tinyblob);
+				para[p].Add("@blob", list[p].blob);
+				para[p].Add("@mediumblob", list[p].mediumblob);
+				para[p].Add("@longblob", list[p].longblob);
+				para[p].Add("@tinytext", list[p].tinytext);
+				para[p].Add("@text", list[p].text);
+				para[p].Add("@mediumtext", list[p].mediumtext);
+			
+				para[p].Add("@tinyint", list[p].tinyint);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<datatype> list)
+		{
+			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@tinyint", list[p].tinyint);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(sbyte[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@tinyint", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(sbyte primaryKey)
+		{
+			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@tinyint", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static datatype GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@tinyint", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<datatype>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<datatype> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<datatype>(sql).AsList<datatype>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="tinyint DESC")
+		{
+			string sql=string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `dapper-test`.`datatype` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<datatype>(sql).AsList<datatype>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 }
 
 /// <summary>
@@ -383,6 +842,14 @@ namespace Entity.cms
 	using MySql.Data.MySqlClient;
 	using Dapper;
 	
+	public class Pager
+	{
+		public int PageIndex { get; set; }
+		public int PageSize { get; set; }
+		public int Total { get; set; }
+		public int PageCount { get { return (int)Math.Ceiling((double)Total/(double)PageSize); } }
+		public object Data { get; set; }
+	}
 	public class cms_articles
 	{
 		#region property
@@ -394,9 +861,9 @@ namespace Entity.cms
 		public int source { get; set; }
 		public string from { get; set; }
 		public int category { get; set; }
-		public Byte enabled { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public sbyte enabled { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -687,6 +1154,34 @@ namespace Entity.cms
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_articles` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_articles>(sql).AsList<cms_articles>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class cms_articles_copy
 	{
@@ -699,9 +1194,9 @@ namespace Entity.cms
 		public int source { get; set; }
 		public string from { get; set; }
 		public int category { get; set; }
-		public Byte enabled { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public sbyte enabled { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -992,6 +1487,34 @@ namespace Entity.cms
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_articles_copy` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_articles_copy>(sql).AsList<cms_articles_copy>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class cms_categories
 	{
@@ -1002,9 +1525,9 @@ namespace Entity.cms
 		public string description { get; set; }
 		public int weight { get; set; }
 		public int parent_id { get; set; }
-		public Byte enabled { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public sbyte enabled { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -1287,6 +1810,34 @@ namespace Entity.cms
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_categories` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_categories>(sql).AsList<cms_categories>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class cms_migrations
 	{
@@ -1385,9 +1936,9 @@ namespace Entity.cms
 		public string icon { get; set; }
 		public int parent_id { get; set; }
 		public int weight { get; set; }
-		public Byte enabled { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public sbyte enabled { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -1686,6 +2237,34 @@ namespace Entity.cms
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_modules` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_modules>(sql).AsList<cms_modules>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class cms_password_resets
 	{
@@ -1693,7 +2272,7 @@ namespace Entity.cms
 		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public string email { get; set; }
 		public string token { get; set; }
-		public TimeSpan created_at { get; set; }
+		public DateTime created_at { get; set; }
 		#endregion property
 		
 	}
@@ -1781,10 +2360,10 @@ namespace Entity.cms
 		public int id { get; set; }
 		public string name { get; set; }
 		public int weight { get; set; }
-		public Byte enabled { get; set; }
+		public sbyte enabled { get; set; }
 		public string module_id { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -2063,6 +2642,34 @@ namespace Entity.cms
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_roles` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_roles>(sql).AsList<cms_roles>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	    }
 	public class cms_users
 	{
@@ -2073,9 +2680,9 @@ namespace Entity.cms
 		public string password { get; set; }
 		public string real_name { get; set; }
 		public int role_id { get; set; }
-		public Byte enabled { get; set; }
-		public TimeSpan created_at { get; set; }
-		public TimeSpan updated_at { get; set; }
+		public sbyte enabled { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		#endregion property
 		
 	}
@@ -2347,6 +2954,34 @@ namespace Entity.cms
 			{
 				try {
 					return con.Query<cms_users>(sql).AsList<cms_users>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		{
+			string sql=string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_users` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<cms_users>(sql).AsList<cms_users>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
 				}
 				catch(Exception e)
 				{

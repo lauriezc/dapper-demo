@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ assembly name="$(SolutionDir)/Model.Common/bin/debug/Model.Common.dll" #>
 <#@ import namespace="System.Configuration" #>
@@ -41,6 +41,14 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 	using MySql.Data.MySqlClient;
 	using Dapper;
 	
+	public class Pager
+	{
+		public int PageIndex { get; set; }
+		public int PageSize { get; set; }
+		public int Total { get; set; }
+		public int PageCount { get { return (int)Math.Ceiling((double)Total/(double)PageSize); } }
+		public object Data { get; set; }
+	}
 <#
 	foreach(var item in tables)
 	{
@@ -58,7 +66,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				throw new NullReferenceException();
 			typeName=type.ToString();
 #>
-		public <#=typeName #> <#=col.Name #> { get; set; }
+		public <#=typeName #> <#=Formater.FormatPropName(col.Name) #> { get; set; }
 <#
 	}
 #>
@@ -80,7 +88,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			for(var i=0;i< fields.Length;i++)
 			{
 #>
-				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=fields[i] #>);
+				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=Formater.FormatPropName(fields[i]) #>);
 <#
             }
 #>							
@@ -111,7 +119,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				for(var i=0;i< fields.Length;i++)
 				{
 #>
-					para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=fields[i] #>);
+					para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=Formater.FormatPropName(fields[i]) #>);
 <#
 				}
 #>			
@@ -169,11 +177,11 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			for(var i=0;i< fields.Length;i++)
 			{
 #>
-				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=fields[i] #>);
+				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=Formater.FormatPropName(fields[i]) #>);
 <#
             }
 #>		
-			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=primary #>);	
+			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=Formater.FormatPropName(primary) #>);	
 			using(var con = new MySqlConnection(_connectionString))
 			{
 				try {
@@ -194,7 +202,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		{
 			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
 			DynamicParameters para =new DynamicParameters();
-			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=primary #>);	
+			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=Formater.FormatPropName(primary) #>);	
 			using(var con = new MySqlConnection(_connectionString))
 			{
 				try {
@@ -222,11 +230,11 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				for(var i=0;i< fields.Length;i++)
 				{
 #>
-				para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=fields[i] #>);
+				para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=Formater.FormatPropName(fields[i]) #>);
 <#
 				}
 #>			
-				para[p].Add("<#=string.Format("@{0}", primary) #>", list[p].<#=primary #>);
+				para[p].Add("<#=string.Format("@{0}", primary) #>", list[p].<#=Formater.FormatPropName(primary) #>);
 			}				
 			using(var con = new MySqlConnection(_connectionString))
 			{
@@ -251,7 +259,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			for(var p =0;p < para.Length; p++)
 			{
 				para[p]=new DynamicParameters();
-				para[p].Add("<#=string.Format("@{0}",primary) #>", list[p].<#=primary #>);
+				para[p].Add("<#=string.Format("@{0}",primary) #>", list[p].<#=Formater.FormatPropName(primary) #>);
 			}				
 			using(var con = new MySqlConnection(_connectionString))
 			{
@@ -356,6 +364,47 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 			}
 		}
+
+		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="<#=primary #> DESC")
+		{
+<#
+		if(db.DbType == Model.Common.Entity.DatabaseType.MySql)
+        {
+#>
+			string sql=string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+<#
+        }
+		else
+        {
+#>
+			string sql=string.Format("SELECT TOP {0} * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {1} AND <#=primary #> NOT IN (SELECT TOP {2} <#=primary #> FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {1}) ORDER BY {3};", pageSize, where, (pageIndex-1)*pageSize, orderField);
+<#
+        }
+#>
+			string countSql=string.Format("SELECT COUNT(0) FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<<#=item.TableName #>>(sql).AsList<<#=item.TableName #>>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 	<#
 	}
 	#>
@@ -383,5 +432,18 @@ public static class Formater
 				return name;
 		}
 	}
+
+	public static string FormatPropName(string name)
+    {
+		string[] reserveKeys={"int","double","float","decimal","char"};
+		if(reserveKeys.Contains(name))
+        {
+			return string.Format("@{0}",name);
+        }
+		else
+		{
+			return name;
+        }
+    }
 }
 #>

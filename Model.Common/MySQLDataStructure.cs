@@ -47,16 +47,16 @@ namespace Model.Common
                     column.DatabaseName = reader["TABLE_SCHEMA"].ToString();
                     column.TableName = reader["TABLE_NAME"].ToString();
                     column.Name = reader["COLUMN_NAME"].ToString();
-                    column.Order = Convert.ToInt32(reader["ORDINAL_POSITION"]);
+                    column.Order = Convert.ToInt64(reader["ORDINAL_POSITION"]);
                     column.Default = reader["COLUMN_DEFAULT"];
                     column.IsNullable = reader["IS_NULLABLE"].ToString().ToLower() == "yes" ? true : false;
                     column.DataType = reader["DATA_TYPE"].ToString();
                     if (reader["CHARACTER_MAXIMUM_LENGTH"]!=null&&!string.IsNullOrEmpty(reader["CHARACTER_MAXIMUM_LENGTH"].ToString()))
-                        column.CharacterMaxLength = Convert.ToInt32(reader["CHARACTER_MAXIMUM_LENGTH"]);
+                        column.CharacterMaxLength = Convert.ToInt64(reader["CHARACTER_MAXIMUM_LENGTH"]);
                     if (reader["NUMERIC_PRECISION"] != null&&!string.IsNullOrEmpty(reader["NUMERIC_PRECISION"].ToString()))
-                        column.NumbericPrecision = Convert.ToInt32(reader["NUMERIC_PRECISION"]);
+                        column.NumbericPrecision = Convert.ToInt64(reader["NUMERIC_PRECISION"]);
                     if (reader["DATETIME_PRECISION"] != null&&!string.IsNullOrEmpty(reader["DATETIME_PRECISION"].ToString()))
-                        column.DatetimePrecision = Convert.ToInt32(reader["DATETIME_PRECISION"]);
+                        column.DatetimePrecision = Convert.ToInt64(reader["DATETIME_PRECISION"]);
                     column.IsAutoIncrease = reader["EXTRA"].ToString().ToLower().IndexOf("auto_increment") > -1 ? true : false;
                     column.IsPrimaryKey = reader["COLUMN_KEY"].ToString().ToLower().IndexOf("pri") > -1 ? true : false;
                     tb.Columns.Add(column);
