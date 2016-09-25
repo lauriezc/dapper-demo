@@ -5,6 +5,7 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@import namespace="Microsoft.VisualStudio.TextTemplating"#>
 <#@ output extension=".cs" #>
 
 
@@ -12,11 +13,13 @@
 	Model.Common.Entity.DataBase[] database= new  Model.Common.Entity.DataBase[]{
 					new Model.Common.Entity.DataBase() {
 						DataBaseName="dapper-test",
+						DbType=Model.Common.Entity.DatabaseType.MySql,
 						NameSpace="dapper-test",
 						ConnectionString="Data Source=10.211.55.2;Database=dapper-test;uid=root;pwd=mn;"
 					 },
 					new Model.Common.Entity.DataBase() {
 						DataBaseName="cms",
+						DbType=Model.Common.Entity.DatabaseType.MySql,
 						NameSpace="cms",
 						ConnectionString="Data Source=10.211.55.2;Database=cms;uid=root;pwd=mn;"
 					 }
@@ -33,6 +36,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 {
 	using System;
 	using System.Configuration;
+	using System.Collections.Generic;
 	using System.Data;
 	using MySql.Data.MySqlClient;
 	using Dapper;
@@ -49,7 +53,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		foreach(var col in item.Columns)
         {
 			var typeName=string.Empty;
-			var type = new Model.Common.DataType().MysqlDataType[col.DataType];
+			var type = new Model.Common.DataType().SqlDataType[col.DataType];
 			if(type==null)
 				throw new NullReferenceException();
 			typeName=type.ToString();
@@ -60,25 +64,29 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 #>
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class <#=item.TableName #>Exten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["<#=db.DataBaseName #>"].ToString();
+		
+		public static int Insert(this <#=item.TableName #> entity)
 		{
 <#
 			var fields = item.Columns.Where(m=>!m.IsAutoIncrease).Select(m=>m.Name).ToArray();
 #>
-			string sql="INSERT INTO `<#=item.DatabaseName #>`.`<#=item.TableName #>` (<#=string.Join(",", fields)#>)VALUES(<#=string.Join(",", fields.Select(m=>string.Format("@{0}",m)).ToArray())#>);";
+			string sql="INSERT INTO <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> (<#=string.Join(",", fields)#>)VALUES(<#=string.Join(",", fields.Select(m=>string.Format("@{0}",m)).ToArray())#>);";
 			DynamicParameters para =new DynamicParameters();
 <#
 			for(var i=0;i< fields.Length;i++)
 			{
 #>
-				para.Add("<#=string.Format("@{0}",fields[i]) #>", this.<#=fields[i] #>);
+				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=fields[i] #>);
 <#
             }
 #>							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -91,13 +99,289 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 			}
 		}
-		#endregion
+
+		public static int Insert(this List<<#=item.TableName #>> list)
+		{
+			string sql="INSERT INTO <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> (<#=string.Join(",", fields)#>)VALUES(<#=string.Join(",", fields.Select(m=>string.Format("@{0}",m)).ToArray())#>);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+<#
+				for(var i=0;i< fields.Length;i++)
+				{
+#>
+					para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=fields[i] #>);
+<#
+				}
+#>			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static <#=item.TableName #> GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<<#=item.TableName #>>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+<#
+			var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);			
+			var primary = primaryKey!=null?primaryKey.Name:"";
+			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
+			if(primaryKey!=null)
+            {
+				var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
+
+#>
+		public static int Update(this <#=item.TableName #> entity)
+		{
+			string sql="UPDATE <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> SET <#=string.Join(",",updateFields) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters para =new DynamicParameters();
+<#
+			for(var i=0;i< fields.Length;i++)
+			{
+#>
+				para.Add("<#=string.Format("@{0}",fields[i]) #>", entity.<#=fields[i] #>);
+<#
+            }
+#>		
+			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=primary #>);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this <#=item.TableName #> entity)
+		{
+			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=primary #>);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<<#=item.TableName #>> list)
+		{
+			string sql="UPDATE <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> SET <#=string.Join(",",updateFields) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+<#
+				for(var i=0;i< fields.Length;i++)
+				{
+#>
+				para[p].Add("<#=string.Format("@{0}",fields[i]) #>", list[p].<#=fields[i] #>);
+<#
+				}
+#>			
+				para[p].Add("<#=string.Format("@{0}", primary) #>", list[p].<#=primary #>);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<<#=item.TableName #>> list)
+		{
+			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("<#=string.Format("@{0}",primary) #>", list[p].<#=primary #>);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(<#=pkTypeName #>[] primaryKeyArray)
+		{
+			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("<#=string.Format("@{0}",primary) #>", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(<#=pkTypeName #> primaryKey)
+		{
+			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("<#=string.Format("@{0}",primary) #>", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static <#=item.TableName #> GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}", primary) #>;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("<#=string.Format("@{0}",primary) #>", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<<#=item.TableName #>>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<<#=item.TableName #>> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<<#=item.TableName #>>(sql).AsList<<#=item.TableName #>>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	<#
 	}
+	#>
+    }
 <#
 	}
 #>
 }
 
 <#
+}
+#>
+<#+
+public static class Formater
+{
+	public static string ForamtDbName(string name,Model.Common.Entity.DatabaseType type)
+	{
+		switch ((int)type)
+		{
+			case (int)Model.Common.Entity.DatabaseType.MySql:
+				return string.Format("`{0}`", name);
+			case (int)Model.Common.Entity.DatabaseType.SQLServer:
+				return string.Format("[{0}]", name);
+			default:
+				return name;
+		}
+	}
 }
 #>

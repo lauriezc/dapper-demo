@@ -9,29 +9,28 @@ namespace Model.Common
 {
     public class DataType
     {
-        private Hashtable _MysqlDataType;
-        public Hashtable MysqlDataType
+        private Hashtable _sqlDataType;
+        public Hashtable SqlDataType
         {
             get {
-                _MysqlDataType = new Hashtable();
-                _MysqlDataType.Add("tinyint", "Byte");
-                _MysqlDataType.Add("int", "int");
-                _MysqlDataType.Add("bigint", "long");
-                _MysqlDataType.Add("datetime", "DateTime");
-                _MysqlDataType.Add("bit", "bool");
-                _MysqlDataType.Add("double", "double");
-                _MysqlDataType.Add("float", "float");
-                _MysqlDataType.Add("decimal", "decimal");
-                _MysqlDataType.Add("char", "string");
-                _MysqlDataType.Add("varchar", "string");
-                _MysqlDataType.Add("timestamp", "TimeSpan");
-                _MysqlDataType.Add("tinytext", "string");
-                _MysqlDataType.Add("text", "string");
-                _MysqlDataType.Add("mediumtext", "string");
-                _MysqlDataType.Add("longtext", "string");
-                return _MysqlDataType;
+                _sqlDataType = new Hashtable();
+                _sqlDataType.Add("tinyint", "Byte");
+                _sqlDataType.Add("int", "int");
+                _sqlDataType.Add("bigint", "long");
+                _sqlDataType.Add("datetime", "DateTime");
+                _sqlDataType.Add("bit", "bool");
+                _sqlDataType.Add("double", "double");
+                _sqlDataType.Add("float", "float");
+                _sqlDataType.Add("decimal", "decimal");
+                _sqlDataType.Add("char", "string");
+                _sqlDataType.Add("varchar", "string");
+                _sqlDataType.Add("timestamp", "TimeSpan");
+                _sqlDataType.Add("tinytext", "string");
+                _sqlDataType.Add("text", "string");
+                _sqlDataType.Add("mediumtext", "string");
+                _sqlDataType.Add("longtext", "string");
+                return _sqlDataType;
             }
         }
-
     }
 }

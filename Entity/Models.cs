@@ -7,6 +7,7 @@ namespace Entity.dapper_test
 {
 	using System;
 	using System.Configuration;
+	using System.Collections.Generic;
 	using System.Data;
 	using MySql.Data.MySqlClient;
 	using Dapper;
@@ -20,17 +21,21 @@ namespace Entity.dapper_test
 		public DateTime Time { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class TestExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
+		
+		public static int Insert(this Test entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`Test` (name,Time)VALUES(@name,@Time);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@name", this.name);
-				para.Add("@Time", this.Time);
+				para.Add("@name", entity.name);
+				para.Add("@Time", entity.Time);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -43,8 +48,240 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<Test> list)
+		{
+			string sql="INSERT INTO `dapper-test`.`Test` (name,Time)VALUES(@name,@Time);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@Time", list[p].Time);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static Test GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<Test>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this Test entity)
+		{
+			string sql="UPDATE `dapper-test`.`Test` SET name=@name,Time=@Time WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@name", entity.name);
+				para.Add("@Time", entity.Time);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this Test entity)
+		{
+			string sql="DELETE FROM `dapper-test`.`Test` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<Test> list)
+		{
+			string sql="UPDATE `dapper-test`.`Test` SET name=@name,Time=@Time WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@name", list[p].name);
+				para[p].Add("@Time", list[p].Time);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<Test> list)
+		{
+			string sql="DELETE FROM `dapper-test`.`Test` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `dapper-test`.`Test` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `dapper-test`.`Test` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static Test GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<Test>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<Test> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<Test>(sql).AsList<Test>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 	public class all_test
 	{
 		#region property
@@ -54,18 +291,22 @@ namespace Entity.dapper_test
 		public DateTime Time { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class all_testExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
+		
+		public static int Insert(this all_test entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`all_test` (id,name,Time)VALUES(@id,@name,@Time);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@id", this.id);
-				para.Add("@name", this.name);
-				para.Add("@Time", this.Time);
+				para.Add("@id", entity.id);
+				para.Add("@name", entity.name);
+				para.Add("@Time", entity.Time);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -78,8 +319,56 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<all_test> list)
+		{
+			string sql="INSERT INTO `dapper-test`.`all_test` (id,name,Time)VALUES(@id,@name,@Time);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@id", list[p].id);
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@Time", list[p].Time);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static all_test GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`all_test` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<all_test>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+    }
 }
 
 /// <summary>
@@ -89,6 +378,7 @@ namespace Entity.cms
 {
 	using System;
 	using System.Configuration;
+	using System.Collections.Generic;
 	using System.Data;
 	using MySql.Data.MySqlClient;
 	using Dapper;
@@ -109,24 +399,28 @@ namespace Entity.cms
 		public TimeSpan updated_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_articlesExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_articles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_articles` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@title", this.title);
-				para.Add("@sub_title", this.sub_title);
-				para.Add("@content", this.content);
-				para.Add("@source", this.source);
-				para.Add("@from", this.from);
-				para.Add("@category", this.category);
-				para.Add("@enabled", this.enabled);
-				para.Add("@created_at", this.created_at);
-				para.Add("@updated_at", this.updated_at);
+				para.Add("@title", entity.title);
+				para.Add("@sub_title", entity.sub_title);
+				para.Add("@content", entity.content);
+				para.Add("@source", entity.source);
+				para.Add("@from", entity.from);
+				para.Add("@category", entity.category);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -139,8 +433,566 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
+
+		public static int Insert(this List<cms_articles> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_articles` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@title", list[p].title);
+					para[p].Add("@sub_title", list[p].sub_title);
+					para[p].Add("@content", list[p].content);
+					para[p].Add("@source", list[p].source);
+					para[p].Add("@from", list[p].from);
+					para[p].Add("@category", list[p].category);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_articles GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_articles entity)
+		{
+			string sql="UPDATE `cms`.`cms_articles` SET title=@title,sub_title=@sub_title,content=@content,source=@source,from=@from,category=@category,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@title", entity.title);
+				para.Add("@sub_title", entity.sub_title);
+				para.Add("@content", entity.content);
+				para.Add("@source", entity.source);
+				para.Add("@from", entity.from);
+				para.Add("@category", entity.category);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_articles entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_articles> list)
+		{
+			string sql="UPDATE `cms`.`cms_articles` SET title=@title,sub_title=@sub_title,content=@content,source=@source,from=@from,category=@category,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@title", list[p].title);
+				para[p].Add("@sub_title", list[p].sub_title);
+				para[p].Add("@content", list[p].content);
+				para[p].Add("@source", list[p].source);
+				para[p].Add("@from", list[p].from);
+				para[p].Add("@category", list[p].category);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_articles> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_articles GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_articles> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_articles>(sql).AsList<cms_articles>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
+	public class cms_articles_copy
+	{
+		#region property
+		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		public int id { get; set; }
+		public string title { get; set; }
+		public string sub_title { get; set; }
+		public string content { get; set; }
+		public int source { get; set; }
+		public string from { get; set; }
+		public int category { get; set; }
+		public Byte enabled { get; set; }
+		public TimeSpan created_at { get; set; }
+		public TimeSpan updated_at { get; set; }
+		#endregion property
+		
 	}
+	public static class cms_articles_copyExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_articles_copy entity)
+		{
+			string sql="INSERT INTO `cms`.`cms_articles_copy` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@title", entity.title);
+				para.Add("@sub_title", entity.sub_title);
+				para.Add("@content", entity.content);
+				para.Add("@source", entity.source);
+				para.Add("@from", entity.from);
+				para.Add("@category", entity.category);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+							
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Insert(this List<cms_articles_copy> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_articles_copy` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@title", list[p].title);
+					para[p].Add("@sub_title", list[p].sub_title);
+					para[p].Add("@content", list[p].content);
+					para[p].Add("@source", list[p].source);
+					para[p].Add("@from", list[p].from);
+					para[p].Add("@category", list[p].category);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_articles_copy GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles_copy>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_articles_copy entity)
+		{
+			string sql="UPDATE `cms`.`cms_articles_copy` SET title=@title,sub_title=@sub_title,content=@content,source=@source,from=@from,category=@category,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@title", entity.title);
+				para.Add("@sub_title", entity.sub_title);
+				para.Add("@content", entity.content);
+				para.Add("@source", entity.source);
+				para.Add("@from", entity.from);
+				para.Add("@category", entity.category);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_articles_copy entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles_copy` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_articles_copy> list)
+		{
+			string sql="UPDATE `cms`.`cms_articles_copy` SET title=@title,sub_title=@sub_title,content=@content,source=@source,from=@from,category=@category,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@title", list[p].title);
+				para[p].Add("@sub_title", list[p].sub_title);
+				para[p].Add("@content", list[p].content);
+				para[p].Add("@source", list[p].source);
+				para[p].Add("@from", list[p].from);
+				para[p].Add("@category", list[p].category);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_articles_copy> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles_copy` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles_copy` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_articles_copy` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_articles_copy GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles_copy>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_articles_copy> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_articles_copy>(sql).AsList<cms_articles_copy>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 	public class cms_categories
 	{
 		#region property
@@ -155,22 +1007,26 @@ namespace Entity.cms
 		public TimeSpan updated_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_categoriesExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_categories entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_categories` (name,description,weight,parent_id,enabled,created_at,updated_at)VALUES(@name,@description,@weight,@parent_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@name", this.name);
-				para.Add("@description", this.description);
-				para.Add("@weight", this.weight);
-				para.Add("@parent_id", this.parent_id);
-				para.Add("@enabled", this.enabled);
-				para.Add("@created_at", this.created_at);
-				para.Add("@updated_at", this.updated_at);
+				para.Add("@name", entity.name);
+				para.Add("@description", entity.description);
+				para.Add("@weight", entity.weight);
+				para.Add("@parent_id", entity.parent_id);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -183,8 +1039,255 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_categories> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_categories` (name,description,weight,parent_id,enabled,created_at,updated_at)VALUES(@name,@description,@weight,@parent_id,@enabled,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@description", list[p].description);
+					para[p].Add("@weight", list[p].weight);
+					para[p].Add("@parent_id", list[p].parent_id);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_categories GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_categories>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_categories entity)
+		{
+			string sql="UPDATE `cms`.`cms_categories` SET name=@name,description=@description,weight=@weight,parent_id=@parent_id,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@name", entity.name);
+				para.Add("@description", entity.description);
+				para.Add("@weight", entity.weight);
+				para.Add("@parent_id", entity.parent_id);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_categories entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_categories` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_categories> list)
+		{
+			string sql="UPDATE `cms`.`cms_categories` SET name=@name,description=@description,weight=@weight,parent_id=@parent_id,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@name", list[p].name);
+				para[p].Add("@description", list[p].description);
+				para[p].Add("@weight", list[p].weight);
+				para[p].Add("@parent_id", list[p].parent_id);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_categories> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_categories` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_categories` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_categories` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_categories GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_categories>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_categories> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_categories>(sql).AsList<cms_categories>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 	public class cms_migrations
 	{
 		#region property
@@ -193,17 +1296,21 @@ namespace Entity.cms
 		public int batch { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_migrationsExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_migrations entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_migrations` (migration,batch)VALUES(@migration,@batch);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@migration", this.migration);
-				para.Add("@batch", this.batch);
+				para.Add("@migration", entity.migration);
+				para.Add("@batch", entity.batch);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -216,8 +1323,55 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_migrations> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_migrations` (migration,batch)VALUES(@migration,@batch);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@migration", list[p].migration);
+					para[p].Add("@batch", list[p].batch);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_migrations GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_migrations` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_migrations>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+    }
 	public class cms_modules
 	{
 		#region property
@@ -236,26 +1390,30 @@ namespace Entity.cms
 		public TimeSpan updated_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_modulesExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_modules entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_modules` (name,uri,controller,action,type,icon,parent_id,weight,enabled,created_at,updated_at)VALUES(@name,@uri,@controller,@action,@type,@icon,@parent_id,@weight,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@name", this.name);
-				para.Add("@uri", this.uri);
-				para.Add("@controller", this.controller);
-				para.Add("@action", this.action);
-				para.Add("@type", this.type);
-				para.Add("@icon", this.icon);
-				para.Add("@parent_id", this.parent_id);
-				para.Add("@weight", this.weight);
-				para.Add("@enabled", this.enabled);
-				para.Add("@created_at", this.created_at);
-				para.Add("@updated_at", this.updated_at);
+				para.Add("@name", entity.name);
+				para.Add("@uri", entity.uri);
+				para.Add("@controller", entity.controller);
+				para.Add("@action", entity.action);
+				para.Add("@type", entity.type);
+				para.Add("@icon", entity.icon);
+				para.Add("@parent_id", entity.parent_id);
+				para.Add("@weight", entity.weight);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -268,8 +1426,267 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_modules> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_modules` (name,uri,controller,action,type,icon,parent_id,weight,enabled,created_at,updated_at)VALUES(@name,@uri,@controller,@action,@type,@icon,@parent_id,@weight,@enabled,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@uri", list[p].uri);
+					para[p].Add("@controller", list[p].controller);
+					para[p].Add("@action", list[p].action);
+					para[p].Add("@type", list[p].type);
+					para[p].Add("@icon", list[p].icon);
+					para[p].Add("@parent_id", list[p].parent_id);
+					para[p].Add("@weight", list[p].weight);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_modules GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_modules>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_modules entity)
+		{
+			string sql="UPDATE `cms`.`cms_modules` SET name=@name,uri=@uri,controller=@controller,action=@action,type=@type,icon=@icon,parent_id=@parent_id,weight=@weight,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@name", entity.name);
+				para.Add("@uri", entity.uri);
+				para.Add("@controller", entity.controller);
+				para.Add("@action", entity.action);
+				para.Add("@type", entity.type);
+				para.Add("@icon", entity.icon);
+				para.Add("@parent_id", entity.parent_id);
+				para.Add("@weight", entity.weight);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_modules entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_modules` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_modules> list)
+		{
+			string sql="UPDATE `cms`.`cms_modules` SET name=@name,uri=@uri,controller=@controller,action=@action,type=@type,icon=@icon,parent_id=@parent_id,weight=@weight,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@name", list[p].name);
+				para[p].Add("@uri", list[p].uri);
+				para[p].Add("@controller", list[p].controller);
+				para[p].Add("@action", list[p].action);
+				para[p].Add("@type", list[p].type);
+				para[p].Add("@icon", list[p].icon);
+				para[p].Add("@parent_id", list[p].parent_id);
+				para[p].Add("@weight", list[p].weight);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_modules> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_modules` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_modules` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_modules` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_modules GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_modules>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_modules> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_modules>(sql).AsList<cms_modules>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 	public class cms_password_resets
 	{
 		#region property
@@ -279,18 +1696,22 @@ namespace Entity.cms
 		public TimeSpan created_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_password_resetsExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_password_resets entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_password_resets` (email,token,created_at)VALUES(@email,@token,@created_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@email", this.email);
-				para.Add("@token", this.token);
-				para.Add("@created_at", this.created_at);
+				para.Add("@email", entity.email);
+				para.Add("@token", entity.token);
+				para.Add("@created_at", entity.created_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -303,8 +1724,56 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_password_resets> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_password_resets` (email,token,created_at)VALUES(@email,@token,@created_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@email", list[p].email);
+					para[p].Add("@token", list[p].token);
+					para[p].Add("@created_at", list[p].created_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_password_resets GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_password_resets` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_password_resets>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+    }
 	public class cms_roles
 	{
 		#region property
@@ -318,21 +1787,25 @@ namespace Entity.cms
 		public TimeSpan updated_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_rolesExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_roles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_roles` (name,weight,enabled,module_id,created_at,updated_at)VALUES(@name,@weight,@enabled,@module_id,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@name", this.name);
-				para.Add("@weight", this.weight);
-				para.Add("@enabled", this.enabled);
-				para.Add("@module_id", this.module_id);
-				para.Add("@created_at", this.created_at);
-				para.Add("@updated_at", this.updated_at);
+				para.Add("@name", entity.name);
+				para.Add("@weight", entity.weight);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@module_id", entity.module_id);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -345,8 +1818,252 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_roles> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_roles` (name,weight,enabled,module_id,created_at,updated_at)VALUES(@name,@weight,@enabled,@module_id,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@weight", list[p].weight);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@module_id", list[p].module_id);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_roles GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_roles>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_roles entity)
+		{
+			string sql="UPDATE `cms`.`cms_roles` SET name=@name,weight=@weight,enabled=@enabled,module_id=@module_id,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@name", entity.name);
+				para.Add("@weight", entity.weight);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@module_id", entity.module_id);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_roles entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_roles` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_roles> list)
+		{
+			string sql="UPDATE `cms`.`cms_roles` SET name=@name,weight=@weight,enabled=@enabled,module_id=@module_id,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@name", list[p].name);
+				para[p].Add("@weight", list[p].weight);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@module_id", list[p].module_id);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_roles> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_roles` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_roles` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_roles` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_roles GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_roles>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_roles> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_roles>(sql).AsList<cms_roles>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 	public class cms_users
 	{
 		#region property
@@ -361,22 +2078,26 @@ namespace Entity.cms
 		public TimeSpan updated_at { get; set; }
 		#endregion property
 		
-		#region methods
-		public int Insert()
+	}
+	public static class cms_usersExten
+	{
+		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
+		
+		public static int Insert(this cms_users entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_users` (user_name,password,real_name,role_id,enabled,created_at,updated_at)VALUES(@user_name,@password,@real_name,@role_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
-				para.Add("@user_name", this.user_name);
-				para.Add("@password", this.password);
-				para.Add("@real_name", this.real_name);
-				para.Add("@role_id", this.role_id);
-				para.Add("@enabled", this.enabled);
-				para.Add("@created_at", this.created_at);
-				para.Add("@updated_at", this.updated_at);
+				para.Add("@user_name", entity.user_name);
+				para.Add("@password", entity.password);
+				para.Add("@real_name", entity.real_name);
+				para.Add("@role_id", entity.role_id);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
 							
-			using(var con=new MySqlConnection(_connectionString))
+			using(var con = new MySqlConnection(_connectionString))
 			{
-				try{
+				try {
 					return con.Execute(sql, para);
 				}
 				catch(Exception e)
@@ -389,7 +2110,254 @@ namespace Entity.cms
 				}
 			}
 		}
-		#endregion
-	}
+
+		public static int Insert(this List<cms_users> list)
+		{
+			string sql="INSERT INTO `cms`.`cms_users` (user_name,password,real_name,role_id,enabled,created_at,updated_at)VALUES(@user_name,@password,@real_name,@role_id,@enabled,@created_at,@updated_at);";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+					para[p].Add("@user_name", list[p].user_name);
+					para[p].Add("@password", list[p].password);
+					para[p].Add("@real_name", list[p].real_name);
+					para[p].Add("@role_id", list[p].role_id);
+					para[p].Add("@enabled", list[p].enabled);
+					para[p].Add("@created_at", list[p].created_at);
+					para[p].Add("@updated_at", list[p].updated_at);
+			
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static cms_users GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_users>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+
+		public static int Update(this cms_users entity)
+		{
+			string sql="UPDATE `cms`.`cms_users` SET user_name=@user_name,password=@password,real_name=@real_name,role_id=@role_id,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+				para.Add("@user_name", entity.user_name);
+				para.Add("@password", entity.password);
+				para.Add("@real_name", entity.real_name);
+				para.Add("@role_id", entity.role_id);
+				para.Add("@enabled", entity.enabled);
+				para.Add("@created_at", entity.created_at);
+				para.Add("@updated_at", entity.updated_at);
+		
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this cms_users entity)
+		{
+			string sql="DELETE FROM `cms`.`cms_users` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+			para.Add("@id", entity.id);	
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Update(this List<cms_users> list)
+		{
+			string sql="UPDATE `cms`.`cms_users` SET user_name=@user_name,password=@password,real_name=@real_name,role_id=@role_id,enabled=@enabled,created_at=@created_at,updated_at=@updated_at WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@user_name", list[p].user_name);
+				para[p].Add("@password", list[p].password);
+				para[p].Add("@real_name", list[p].real_name);
+				para[p].Add("@role_id", list[p].role_id);
+				para[p].Add("@enabled", list[p].enabled);
+				para[p].Add("@created_at", list[p].created_at);
+				para[p].Add("@updated_at", list[p].updated_at);
+			
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(this List<cms_users> list)
+		{
+			string sql="DELETE FROM `cms`.`cms_users` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[list.Count];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", list[p].id);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		
+		public static int Delete(int[] primaryKeyArray)
+		{
+			string sql="DELETE FROM `cms`.`cms_users` WHERE id=@id;";
+			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
+			for(var p =0;p < para.Length; p++)
+			{
+				para[p]=new DynamicParameters();
+				para[p].Add("@id", primaryKeyArray[p]);
+			}				
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+		public static int Delete(int primaryKey)
+		{
+			string sql="DELETE FROM `cms`.`cms_users` WHERE id=@id;";
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Execute(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return -1;
+				}
+			}
+		}
+
+
+		public static cms_users GetModel(object primaryKey)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE id=@id;");		
+			DynamicParameters para =new DynamicParameters();
+		    para.Add("@id", primaryKey);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_users>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		public static List<cms_users> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<cms_users>(sql).AsList<cms_users>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+	    }
 }
 
