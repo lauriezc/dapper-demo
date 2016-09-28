@@ -1,0 +1,44 @@
+﻿<#@ IntelliSenseLanguage processor="tangibleT4Editor" language="C#" #>
+<#+
+public static class Formater
+{
+	public static string ForamtDbName(string name,Model.Common.Entity.DatabaseType type)
+	{
+		switch ((int)type)
+		{
+			case (int)Model.Common.Entity.DatabaseType.MySql:
+				return string.Format("`{0}`", name);
+			case (int)Model.Common.Entity.DatabaseType.SQLServer:
+				return string.Format("[{0}]", name);
+			default:
+				return name;
+		}
+	}
+
+	public static string FormatPropName(string name)
+    {
+		string[] reserveKeys={"int","double","float","decimal","char"};
+		if(reserveKeys.Contains(name))
+        {
+			return string.Format("@{0}",name);
+        }
+		else
+		{
+			return name;
+        }
+    }
+
+	public static string FormatNullable(string type,bool isNullable)
+    {
+		string[] cannotBeNullable={"byte[]","string"};
+		if(cannotBeNullable.Contains(type)||!isNullable)
+        {
+			return type;
+        }
+		else
+		{
+			return string.Format("Nullable<{0}>",type);
+        }
+    }
+}
+#>

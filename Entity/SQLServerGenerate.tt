@@ -12,21 +12,15 @@
 <#
 	Model.Common.Entity.DataBase[] database= new  Model.Common.Entity.DataBase[]{
 					new Model.Common.Entity.DataBase() {
-						DataBaseName="dapper-test",
-						DbType=Model.Common.Entity.DatabaseType.MySql,
-						NameSpace="dapper-test",
-						ConnectionString="Data Source=10.211.55.2;Database=dapper-test;uid=root;pwd=mn;"
-					 },
-					new Model.Common.Entity.DataBase() {
-						DataBaseName="cms",
-						DbType=Model.Common.Entity.DatabaseType.MySql,
-						NameSpace="cms",
-						ConnectionString="Data Source=10.211.55.2;Database=cms;uid=root;pwd=mn;"
+						DataBaseName="THLotteryDB",
+						DbType=Model.Common.Entity.DatabaseType.SQLServer,
+						NameSpace="THLotteryDB",
+						ConnectionString="Data Source=192.168.6.101;Database=THLotteryDB;uid=sa;pwd=123456;"
 					 }
 				};
 	foreach(var db in database)
 	{
-		var access=new Model.Common.MySQLDataStructure(db.ConnectionString);
+		var access=new Model.Common.SQLServerDataStructure(db.ConnectionString);
 		List<Model.Common.Entity.Table> tables=access.GetTables(db.DataBaseName);
 #>
 /// <summary>
@@ -38,7 +32,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 	using System.Configuration;
 	using System.Collections.Generic;
 	using System.Data;
-	using MySql.Data.MySqlClient;
+	using System.Data.SqlClient;
 	using Dapper;
 	
 	public class Pager
@@ -52,11 +46,19 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
 	foreach(var item in tables)
 	{
+		
+		var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);
+		if(primaryKey==null)
+        {
+			continue;
+        }			
+		var primary = primaryKey.Name;
+		var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
+		var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
 #>
 	public class <#=item.TableName #>
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["<#=db.DataBaseName #>"].ToString();
 <#
 		foreach(var col in item.Columns)
         {
@@ -64,7 +66,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			var type = new Model.Common.DataType().SqlDataType[col.DataType];
 			if(type==null)
 				throw new NullReferenceException();
-			typeName=type.ToString();
+			typeName=Formater.FormatNullable(type.ToString(),col.IsNullable);
 #>
 		public <#=typeName #> <#=Formater.FormatPropName(col.Name) #> { get; set; }
 <#
@@ -92,7 +94,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
             }
 #>							
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -124,7 +126,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 #>			
 			}				
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -144,7 +146,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		public static <#=item.TableName #> GetModel(string where, string orderByField)
 		{
 			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.QueryFirst<<#=item.TableName #>>(sql);
@@ -160,15 +162,6 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			}
 		}
 
-<#
-			var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);			
-			var primary = primaryKey!=null?primaryKey.Name:"";
-			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
-			if(primaryKey!=null)
-            {
-				var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
-
-#>
 		public static int Update(this <#=item.TableName #> entity)
 		{
 			string sql="UPDATE <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> SET <#=string.Join(",",updateFields) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
@@ -182,7 +175,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
             }
 #>		
 			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=Formater.FormatPropName(primary) #>);	
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -203,7 +196,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
 			DynamicParameters para =new DynamicParameters();
 			para.Add("<#=string.Format("@{0}",primary) #>", entity.<#=Formater.FormatPropName(primary) #>);	
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -236,7 +229,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 #>			
 				para[p].Add("<#=string.Format("@{0}", primary) #>", list[p].<#=Formater.FormatPropName(primary) #>);
 			}				
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -261,7 +254,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				para[p]=new DynamicParameters();
 				para[p].Add("<#=string.Format("@{0}",primary) #>", list[p].<#=Formater.FormatPropName(primary) #>);
 			}				
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -287,7 +280,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				para[p]=new DynamicParameters();
 				para[p].Add("<#=string.Format("@{0}",primary) #>", primaryKeyArray[p]);
 			}				
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -308,7 +301,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			string sql="DELETE FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
 			DynamicParameters para =new DynamicParameters();
 		    para.Add("<#=string.Format("@{0}",primary) #>", primaryKey);
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Execute(sql, para);
@@ -330,7 +323,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}", primary) #>;");		
 			DynamicParameters para =new DynamicParameters();
 		    para.Add("<#=string.Format("@{0}",primary) #>", primaryKey);
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.QueryFirst<<#=item.TableName #>>(sql, para);
@@ -349,7 +342,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		public static List<<#=item.TableName #>> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);		
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					return con.Query<<#=item.TableName #>>(sql).AsList<<#=item.TableName #>>();
@@ -382,7 +375,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
         }
 #>
 			string countSql=string.Format("SELECT COUNT(0) FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);
-			using(var con = new MySqlConnection(_connectionString))
+			using(var con = new SqlConnection(_connectionString))
 			{
 				try {
 					var count = con.ExecuteScalar<int>(countSql);
@@ -405,9 +398,6 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 			}
 		}
-	<#
-	}
-	#>
     }
 <#
 	}
@@ -417,33 +407,5 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
 }
 #>
-<#+
-public static class Formater
-{
-	public static string ForamtDbName(string name,Model.Common.Entity.DatabaseType type)
-	{
-		switch ((int)type)
-		{
-			case (int)Model.Common.Entity.DatabaseType.MySql:
-				return string.Format("`{0}`", name);
-			case (int)Model.Common.Entity.DatabaseType.SQLServer:
-				return string.Format("[{0}]", name);
-			default:
-				return name;
-		}
-	}
 
-	public static string FormatPropName(string name)
-    {
-		string[] reserveKeys={"int","double","float","decimal","char"};
-		if(reserveKeys.Contains(name))
-        {
-			return string.Format("@{0}",name);
-        }
-		else
-		{
-			return name;
-        }
-    }
-}
-#>
+<#@include file="Formater.ttinclude" #>

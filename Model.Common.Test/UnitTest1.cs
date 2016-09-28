@@ -118,7 +118,7 @@ namespace Model.Common.Test
         {
             var index = 2;
             var size = 3;
-            var list = TestExten.GetPageList(2, size);
+            var list = TestExten.GetPageList(index, size);
             var tarlist = TestExten.GetList("1=1").OrderByDescending(m => m.id).Skip((index-1)*size).Take(size).ToList();
             bool valid = true;
             var actual = list.Data as List<Entity.dapper_test.Test>;

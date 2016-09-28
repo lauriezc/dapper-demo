@@ -23,7 +23,6 @@ namespace Entity.dapper_test
 	public class Test
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
 		public int id { get; set; }
 		public string name { get; set; }
 		public DateTime Time { get; set; }
@@ -321,9 +320,11 @@ namespace Entity.dapper_test
 	public class all_test
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
+		public int id { get; set; }
 		public int id { get; set; }
 		public string name { get; set; }
+		public string name { get; set; }
+		public DateTime Time { get; set; }
 		public DateTime Time { get; set; }
 		#endregion property
 		
@@ -334,10 +335,13 @@ namespace Entity.dapper_test
 		
 		public static int Insert(this all_test entity)
 		{
-			string sql="INSERT INTO `dapper-test`.`all_test` (id,name,Time)VALUES(@id,@name,@Time);";
+			string sql="INSERT INTO `dapper-test`.`all_test` (id,id,name,name,Time,Time)VALUES(@id,@id,@name,@name,@Time,@Time);";
 			DynamicParameters para =new DynamicParameters();
 				para.Add("@id", entity.id);
+				para.Add("@id", entity.id);
 				para.Add("@name", entity.name);
+				para.Add("@name", entity.name);
+				para.Add("@Time", entity.Time);
 				para.Add("@Time", entity.Time);
 							
 			using(var con = new MySqlConnection(_connectionString))
@@ -358,13 +362,16 @@ namespace Entity.dapper_test
 
 		public static int Insert(this List<all_test> list)
 		{
-			string sql="INSERT INTO `dapper-test`.`all_test` (id,name,Time)VALUES(@id,@name,@Time);";
+			string sql="INSERT INTO `dapper-test`.`all_test` (id,id,name,name,Time,Time)VALUES(@id,@id,@name,@name,@Time,@Time);";
 			DynamicParameters[] para =new DynamicParameters[list.Count];
 			for(var p =0;p < para.Length; p++)
 			{
 				para[p]=new DynamicParameters();
 					para[p].Add("@id", list[p].id);
+					para[p].Add("@id", list[p].id);
 					para[p].Add("@name", list[p].name);
+					para[p].Add("@name", list[p].name);
+					para[p].Add("@Time", list[p].Time);
 					para[p].Add("@Time", list[p].Time);
 			
 			}				
@@ -408,7 +415,6 @@ namespace Entity.dapper_test
 	public class datatype
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
 		public bool bit { get; set; }
 		public sbyte tinyint { get; set; }
 		public short smallint { get; set; }
@@ -713,7 +719,7 @@ namespace Entity.dapper_test
 		}
 
 		
-		public static int Delete(sbyte[] primaryKeyArray)
+		public static int Delete(byte[] primaryKeyArray)
 		{
 			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
 			DynamicParameters[] para =new DynamicParameters[primaryKeyArray.Length];
@@ -738,7 +744,7 @@ namespace Entity.dapper_test
 			}
 		}
 
-		public static int Delete(sbyte primaryKey)
+		public static int Delete(byte primaryKey)
 		{
 			string sql="DELETE FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;";
 			DynamicParameters para =new DynamicParameters();
@@ -853,7 +859,6 @@ namespace Entity.cms
 	public class cms_articles
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string title { get; set; }
 		public string sub_title { get; set; }
@@ -1186,7 +1191,6 @@ namespace Entity.cms
 	public class cms_articles_copy
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string title { get; set; }
 		public string sub_title { get; set; }
@@ -1519,7 +1523,6 @@ namespace Entity.cms
 	public class cms_categories
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string name { get; set; }
 		public string description { get; set; }
@@ -1842,7 +1845,6 @@ namespace Entity.cms
 	public class cms_migrations
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public string migration { get; set; }
 		public int batch { get; set; }
 		#endregion property
@@ -1926,7 +1928,6 @@ namespace Entity.cms
 	public class cms_modules
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string name { get; set; }
 		public string uri { get; set; }
@@ -2269,7 +2270,6 @@ namespace Entity.cms
 	public class cms_password_resets
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public string email { get; set; }
 		public string token { get; set; }
 		public DateTime created_at { get; set; }
@@ -2356,7 +2356,6 @@ namespace Entity.cms
 	public class cms_roles
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string name { get; set; }
 		public int weight { get; set; }
@@ -2674,7 +2673,6 @@ namespace Entity.cms
 	public class cms_users
 	{
 		#region property
-		private string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
 		public int id { get; set; }
 		public string user_name { get; set; }
 		public string password { get; set; }
@@ -2995,4 +2993,6 @@ namespace Entity.cms
 		}
 	    }
 }
+
+
 

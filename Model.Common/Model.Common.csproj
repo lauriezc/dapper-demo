@@ -49,9 +49,10 @@
     <Compile Include="Entity\Column.cs" />
     <Compile Include="Entity\DataBase.cs" />
     <Compile Include="Entity\DbMethod.cs" />
+    <Compile Include="SQLServerDataStructure.cs" />
     <Compile Include="Entity\Table.cs" />
     <Compile Include="IDataStructure.cs" />
-    <Compile Include="MySQLDataStructure.cs" />
+    <Compile Include="MySqlDataStructure.cs" />
     <Compile Include="Entity\Parameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
