@@ -12,10 +12,10 @@
 <#
 	Model.Common.Entity.DataBase[] database= new  Model.Common.Entity.DataBase[]{
 					new Model.Common.Entity.DataBase() {
-						DataBaseName="THLotteryDB",
+						DataBaseName="test",
 						DbType=Model.Common.Entity.DatabaseType.SQLServer,
-						NameSpace="THLotteryDB",
-						ConnectionString="Data Source=192.168.6.101;Database=THLotteryDB;uid=sa;pwd=123456;"
+						NameSpace="test",
+						ConnectionString="Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=test;Integrated Security=True;Pooling=False"
 					 }
 				};
 	foreach(var db in database)
@@ -48,13 +48,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 	{
 		
 		var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);
-		if(primaryKey==null)
-        {
-			continue;
-        }			
-		var primary = primaryKey.Name;
-		var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
-		var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
+		var primary = primaryKey==null?"":primaryKey.Name;
 #>
 	public class <#=item.TableName #>
 	{
@@ -78,7 +72,12 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 	public static class <#=item.TableName #>Exten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["<#=db.DataBaseName #>"].ToString();
-		
+<#
+		if(item.Type==(int)Model.Common.Entity.TableType.DataTable)
+        {
+			//原始表格可以生成insert方法
+#>
+
 		public static int Insert(this <#=item.TableName #> entity)
 		{
 <#
@@ -142,25 +141,13 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			}
 		}
 
-		
-		public static <#=item.TableName #> GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new SqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<<#=item.TableName #>>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+<#
+		if(primaryKey!=null)
+        {
+			//是原始表格且有主键时，生成update，delete，getmodel等方法
+			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
+			var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
+#>
 
 		public static int Update(this <#=item.TableName #> entity)
 		{
@@ -327,6 +314,29 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			{
 				try {
 					return con.QueryFirst<<#=item.TableName #>>(sql, para);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+<#
+	}//以上生成是原始表格并且有主键的表方法
+}//if(item.Type==(int)Model.Common.Entity.TableType.DataTable)
+#>
+		
+		public static <#=item.TableName #> GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new SqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<<#=item.TableName #>>(sql);
 				}
 				catch(Exception e)
 				{

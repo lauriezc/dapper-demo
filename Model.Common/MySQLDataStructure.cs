@@ -17,7 +17,7 @@ namespace Model.Common
         {
             this._connectionString = connectionString;
         }
-        private string _tableSQL = "SELECT c.`TABLE_SCHEMA`,c.`TABLE_NAME`,c.`COLUMN_NAME`,c.`ORDINAL_POSITION`,c.`COLUMN_DEFAULT`,c.`IS_NULLABLE`,c.`DATA_TYPE`,c.`CHARACTER_MAXIMUM_LENGTH`,c.`CHARACTER_OCTET_LENGTH`,c.`NUMERIC_PRECISION`,c.`NUMERIC_SCALE`,c.`DATETIME_PRECISION`,c.`CHARACTER_SET_NAME`,c.`COLUMN_KEY`,c.`EXTRA`, tv.TYPE from (SELECT  `TABLE_SCHEMA`,`TABLE_NAME`,1 AS TYPE FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA`='{0}' UNION SELECT `TABLE_SCHEMA`,`TABLE_NAME`,0 AS TYPE FROM information_schema.VIEWS WHERE `TABLE_SCHEMA`='{0}') tv LEFT JOIN information_schema.`COLUMNS` c ON tv.TABLE_NAME=c.TABLE_NAME";
+        private string _tableSQL = "SELECT c.`TABLE_SCHEMA`,c.`TABLE_NAME`,c.`COLUMN_NAME`,c.`ORDINAL_POSITION`,c.`COLUMN_DEFAULT`,c.`IS_NULLABLE`,c.`DATA_TYPE`,c.`CHARACTER_MAXIMUM_LENGTH`,c.`CHARACTER_OCTET_LENGTH`,c.`NUMERIC_PRECISION`,c.`NUMERIC_SCALE`,c.`DATETIME_PRECISION`,c.`CHARACTER_SET_NAME`,c.`COLUMN_KEY`,c.`EXTRA`,t.TABLE_TYPE from   information_schema.`COLUMNS` c LEFT JOIN information_schema.`TABLES` t ON t.TABLE_NAME=c.TABLE_NAME  WHERE c.`TABLE_SCHEMA`='{0}'";
         private string _procedureSQL = "SELECT `SPECIFIC_SCHEMA`,`SPECIFIC_NAME`,`ORDINAL_POSITION`,`PARAMETER_MODE`,`PARAMETER_NAME`,`DATA_TYPE`,`CHARACTER_MAXIMUM_LENGTH`,`CHARACTER_OCTET_LENGTH`,`NUMERIC_PRECISION`,`NUMERIC_SCALE`,`DATETIME_PRECISION`,`CHARACTER_SET_NAME`,`DTD_IDENTIFIER`,`ROUTINE_TYPE` FROM information_schema.PARAMETERS WHERE SPECIFIC_SCHEMA='DAPPER-TEST';";
 
 
@@ -34,7 +34,7 @@ namespace Model.Common
                 {
                     var db = reader["TABLE_SCHEMA"].ToString();
                     var tableName = reader["TABLE_NAME"].ToString();
-                    var type = Convert.ToInt32(reader["TYPE"]);
+                    var type = reader["TABLE_TYPE"].ToString()== "BASE TABLE"?(int)TableType.DataTable:(int)TableType.DataView;
                     Table tb = tbList.FirstOrDefault(m => m.DatabaseName == db && m.TableName == tableName);
                     if (tb == null)
                     {

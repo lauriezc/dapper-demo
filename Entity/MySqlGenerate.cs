@@ -32,8 +32,7 @@ namespace Entity.dapper_test
 	public static class TestExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
-		
-		public static int Insert(this Test entity)
+public static int Insert(this Test entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`Test` (name,Time)VALUES(@name,@Time);";
 			DynamicParameters para =new DynamicParameters();
@@ -84,24 +83,8 @@ namespace Entity.dapper_test
 		}
 
 		
-		public static Test GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<Test>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this Test entity)
 		{
@@ -247,8 +230,6 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-
-
 		public static Test GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE id=@id;");		
@@ -270,6 +251,28 @@ namespace Entity.dapper_test
 			}
 		}
 		
+
+
+		public static Test GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<Test>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<Test> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0};", where);		
@@ -289,7 +292,7 @@ namespace Entity.dapper_test
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `dapper-test`.`Test` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `dapper-test`.`Test` WHERE {0};", where);
@@ -316,15 +319,12 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-	    }
+    }
 	public class all_test
 	{
 		#region property
 		public int id { get; set; }
-		public int id { get; set; }
 		public string name { get; set; }
-		public string name { get; set; }
-		public DateTime Time { get; set; }
 		public DateTime Time { get; set; }
 		#endregion property
 		
@@ -332,66 +332,7 @@ namespace Entity.dapper_test
 	public static class all_testExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
-		
-		public static int Insert(this all_test entity)
-		{
-			string sql="INSERT INTO `dapper-test`.`all_test` (id,id,name,name,Time,Time)VALUES(@id,@id,@name,@name,@Time,@Time);";
-			DynamicParameters para =new DynamicParameters();
-				para.Add("@id", entity.id);
-				para.Add("@id", entity.id);
-				para.Add("@name", entity.name);
-				para.Add("@name", entity.name);
-				para.Add("@Time", entity.Time);
-				para.Add("@Time", entity.Time);
-							
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
 
-		public static int Insert(this List<all_test> list)
-		{
-			string sql="INSERT INTO `dapper-test`.`all_test` (id,id,name,name,Time,Time)VALUES(@id,@id,@name,@name,@Time,@Time);";
-			DynamicParameters[] para =new DynamicParameters[list.Count];
-			for(var p =0;p < para.Length; p++)
-			{
-				para[p]=new DynamicParameters();
-					para[p].Add("@id", list[p].id);
-					para[p].Add("@id", list[p].id);
-					para[p].Add("@name", list[p].name);
-					para[p].Add("@name", list[p].name);
-					para[p].Add("@Time", list[p].Time);
-					para[p].Add("@Time", list[p].Time);
-			
-			}				
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
-
-		
 		public static all_test GetModel(string where, string orderByField)
 		{
 			string sql = string.Format("SELECT * FROM `dapper-test`.`all_test` WHERE {0} ORDER BY {1};", where, orderByField);		
@@ -410,7 +351,54 @@ namespace Entity.dapper_test
 				}
 			}
 		}
+		
+		
+		public static List<all_test> GetList(string where)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`all_test` WHERE {0};", where);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.Query<all_test>(sql).AsList<all_test>();
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
 
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField, string where="1=1")
+		{
+			string sql=string.Format("SELECT * FROM `dapper-test`.`all_test` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
+			string countSql=string.Format("SELECT COUNT(0) FROM `dapper-test`.`all_test` WHERE {0};", where);
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					var count = con.ExecuteScalar<int>(countSql);
+					var list = con.Query<all_test>(sql).AsList<all_test>();
+					return new Pager()
+					{
+						PageIndex = pageIndex,
+						PageSize = pageSize,
+						Total = count,
+						Data = list
+					};
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
     }
 	public class datatype
 	{
@@ -449,8 +437,7 @@ namespace Entity.dapper_test
 	public static class datatypeExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
-		
-		public static int Insert(this datatype entity)
+public static int Insert(this datatype entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`datatype` (bit,smallint,mediumint,int,integer,bigint,real,double,float,decimal,numeric,char,varchar,binary,varbinary,date,time,datetime,timestamp,year,tinyblob,blob,mediumblob,longblob,tinytext,text,mediumtext)VALUES(@bit,@smallint,@mediumint,@int,@integer,@bigint,@real,@double,@float,@decimal,@numeric,@char,@varchar,@binary,@varbinary,@date,@time,@datetime,@timestamp,@year,@tinyblob,@blob,@mediumblob,@longblob,@tinytext,@text,@mediumtext);";
 			DynamicParameters para =new DynamicParameters();
@@ -551,24 +538,8 @@ namespace Entity.dapper_test
 		}
 
 		
-		public static datatype GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<datatype>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this datatype entity)
 		{
@@ -764,8 +735,6 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-
-
 		public static datatype GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE tinyint=@tinyint;");		
@@ -787,6 +756,28 @@ namespace Entity.dapper_test
 			}
 		}
 		
+
+
+		public static datatype GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<datatype>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<datatype> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0};", where);		
@@ -806,7 +797,7 @@ namespace Entity.dapper_test
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="tinyint DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="tinyint DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `dapper-test`.`datatype` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `dapper-test`.`datatype` WHERE {0};", where);
@@ -833,7 +824,7 @@ namespace Entity.dapper_test
 				}
 			}
 		}
-	    }
+    }
 }
 
 /// <summary>
@@ -875,8 +866,7 @@ namespace Entity.cms
 	public static class cms_articlesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_articles entity)
+public static int Insert(this cms_articles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_articles` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -941,24 +931,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_articles GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_articles>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_articles entity)
 		{
@@ -1118,8 +1092,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_articles GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE id=@id;");		
@@ -1141,6 +1113,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_articles GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_articles> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0};", where);		
@@ -1160,7 +1154,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_articles` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_articles` WHERE {0};", where);
@@ -1187,7 +1181,7 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
+    }
 	public class cms_articles_copy
 	{
 		#region property
@@ -1207,8 +1201,7 @@ namespace Entity.cms
 	public static class cms_articles_copyExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_articles_copy entity)
+public static int Insert(this cms_articles_copy entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_articles_copy` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -1273,24 +1266,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_articles_copy GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_articles_copy>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_articles_copy entity)
 		{
@@ -1450,8 +1427,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_articles_copy GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE id=@id;");		
@@ -1473,6 +1448,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_articles_copy GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_articles_copy>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_articles_copy> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0};", where);		
@@ -1492,7 +1489,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_articles_copy` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_articles_copy` WHERE {0};", where);
@@ -1519,7 +1516,7 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
+    }
 	public class cms_categories
 	{
 		#region property
@@ -1537,8 +1534,7 @@ namespace Entity.cms
 	public static class cms_categoriesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_categories entity)
+public static int Insert(this cms_categories entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_categories` (name,description,weight,parent_id,enabled,created_at,updated_at)VALUES(@name,@description,@weight,@parent_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -1599,24 +1595,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_categories GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_categories>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_categories entity)
 		{
@@ -1772,8 +1752,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_categories GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE id=@id;");		
@@ -1795,6 +1773,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_categories GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_categories>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_categories> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0};", where);		
@@ -1814,7 +1814,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_categories` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_categories` WHERE {0};", where);
@@ -1841,89 +1841,6 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
-	public class cms_migrations
-	{
-		#region property
-		public string migration { get; set; }
-		public int batch { get; set; }
-		#endregion property
-		
-	}
-	public static class cms_migrationsExten
-	{
-		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_migrations entity)
-		{
-			string sql="INSERT INTO `cms`.`cms_migrations` (migration,batch)VALUES(@migration,@batch);";
-			DynamicParameters para =new DynamicParameters();
-				para.Add("@migration", entity.migration);
-				para.Add("@batch", entity.batch);
-							
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
-
-		public static int Insert(this List<cms_migrations> list)
-		{
-			string sql="INSERT INTO `cms`.`cms_migrations` (migration,batch)VALUES(@migration,@batch);";
-			DynamicParameters[] para =new DynamicParameters[list.Count];
-			for(var p =0;p < para.Length; p++)
-			{
-				para[p]=new DynamicParameters();
-					para[p].Add("@migration", list[p].migration);
-					para[p].Add("@batch", list[p].batch);
-			
-			}				
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
-
-		
-		public static cms_migrations GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_migrations` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_migrations>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
-
     }
 	public class cms_modules
 	{
@@ -1946,8 +1863,7 @@ namespace Entity.cms
 	public static class cms_modulesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_modules entity)
+public static int Insert(this cms_modules entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_modules` (name,uri,controller,action,type,icon,parent_id,weight,enabled,created_at,updated_at)VALUES(@name,@uri,@controller,@action,@type,@icon,@parent_id,@weight,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -2016,24 +1932,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_modules GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_modules>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_modules entity)
 		{
@@ -2197,8 +2097,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_modules GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE id=@id;");		
@@ -2220,6 +2118,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_modules GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_modules>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_modules> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0};", where);		
@@ -2239,7 +2159,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_modules` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_modules` WHERE {0};", where);
@@ -2266,92 +2186,6 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
-	public class cms_password_resets
-	{
-		#region property
-		public string email { get; set; }
-		public string token { get; set; }
-		public DateTime created_at { get; set; }
-		#endregion property
-		
-	}
-	public static class cms_password_resetsExten
-	{
-		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_password_resets entity)
-		{
-			string sql="INSERT INTO `cms`.`cms_password_resets` (email,token,created_at)VALUES(@email,@token,@created_at);";
-			DynamicParameters para =new DynamicParameters();
-				para.Add("@email", entity.email);
-				para.Add("@token", entity.token);
-				para.Add("@created_at", entity.created_at);
-							
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
-
-		public static int Insert(this List<cms_password_resets> list)
-		{
-			string sql="INSERT INTO `cms`.`cms_password_resets` (email,token,created_at)VALUES(@email,@token,@created_at);";
-			DynamicParameters[] para =new DynamicParameters[list.Count];
-			for(var p =0;p < para.Length; p++)
-			{
-				para[p]=new DynamicParameters();
-					para[p].Add("@email", list[p].email);
-					para[p].Add("@token", list[p].token);
-					para[p].Add("@created_at", list[p].created_at);
-			
-			}				
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.Execute(sql, para);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return -1;
-				}
-			}
-		}
-
-		
-		public static cms_password_resets GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_password_resets` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_password_resets>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
-
     }
 	public class cms_roles
 	{
@@ -2369,8 +2203,7 @@ namespace Entity.cms
 	public static class cms_rolesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_roles entity)
+public static int Insert(this cms_roles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_roles` (name,weight,enabled,module_id,created_at,updated_at)VALUES(@name,@weight,@enabled,@module_id,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -2429,24 +2262,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_roles GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_roles>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_roles entity)
 		{
@@ -2600,8 +2417,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_roles GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE id=@id;");		
@@ -2623,6 +2438,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_roles GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_roles>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_roles> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0};", where);		
@@ -2642,7 +2479,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_roles` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_roles` WHERE {0};", where);
@@ -2669,7 +2506,7 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
+    }
 	public class cms_users
 	{
 		#region property
@@ -2687,8 +2524,7 @@ namespace Entity.cms
 	public static class cms_usersExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-		
-		public static int Insert(this cms_users entity)
+public static int Insert(this cms_users entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_users` (user_name,password,real_name,role_id,enabled,created_at,updated_at)VALUES(@user_name,@password,@real_name,@role_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -2749,24 +2585,8 @@ namespace Entity.cms
 		}
 
 		
-		public static cms_users GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<cms_users>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
+		
+		
 
 		public static int Update(this cms_users entity)
 		{
@@ -2922,8 +2742,6 @@ namespace Entity.cms
 				}
 			}
 		}
-
-
 		public static cms_users GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE id=@id;");		
@@ -2945,6 +2763,28 @@ namespace Entity.cms
 			}
 		}
 		
+
+
+		public static cms_users GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<cms_users>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<cms_users> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0};", where);		
@@ -2964,7 +2804,7 @@ namespace Entity.cms
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="id DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField="id DESC", string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM `cms`.`cms_users` WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM `cms`.`cms_users` WHERE {0};", where);
@@ -2991,7 +2831,7 @@ namespace Entity.cms
 				}
 			}
 		}
-	    }
+    }
 }
 
 

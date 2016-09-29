@@ -27,7 +27,7 @@ namespace Model.Common
 
         public List<Table> GetTables(string database)
         {
-            string sql = "SELECT c.TABLE_CATALOG,c.TABLE_SCHEMA,c.TABLE_NAME,c.COLUMN_NAME,c.ORDINAL_POSITION,c.COLUMN_DEFAULT,c.IS_NULLABLE,c.DATA_TYPE,c.CHARACTER_MAXIMUM_LENGTH,c.CHARACTER_OCTET_LENGTH,c.NUMERIC_PRECISION,c.NUMERIC_SCALE,c.DATETIME_PRECISION,c.CHARACTER_SET_NAME,tv.TYPE,";
+            string sql = "SELECT c.TABLE_CATALOG,c.TABLE_SCHEMA,c.TABLE_NAME,c.COLUMN_NAME,c.ORDINAL_POSITION,c.COLUMN_DEFAULT,c.IS_NULLABLE,c.DATA_TYPE,c.CHARACTER_MAXIMUM_LENGTH,c.CHARACTER_OCTET_LENGTH,c.NUMERIC_PRECISION,c.NUMERIC_SCALE,c.DATETIME_PRECISION,c.CHARACTER_SET_NAME,t.TABLE_TYPE,";
             sql += " (SELECT COUNT(0) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS T JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS K";
             sql += " ON T.TABLE_NAME = K.TABLE_NAME ";
             sql += " AND T.CONSTRAINT_CATALOG = K.CONSTRAINT_CATALOG ";
@@ -37,7 +37,7 @@ namespace Model.Common
             sql += " AND K.COLUMN_NAME = c.COLUMN_NAME ";
             sql += " AND K.TABLE_NAME = c.TABLE_NAME ";
             sql += " AND K.TABLE_CATALOG = c.TABLE_CATALOG) AS ISPRIMARYKEY,COLUMNPROPERTY(OBJECT_ID(c.TABLE_NAME),c.COLUMN_NAME,'IsIdentity') AS ISAUTOINCREASE ";
-            sql += " from (SELECT TABLE_SCHEMA,TABLE_NAME,1 AS TYPE FROM information_schema.TABLES WHERE TABLE_CATALOG='{0}' UNION SELECT TABLE_SCHEMA,TABLE_NAME,0 AS TYPE FROM information_schema.VIEWS WHERE TABLE_CATALOG='{0}') tv LEFT JOIN information_schema.COLUMNS c ON tv.TABLE_NAME=c.TABLE_NAME;";
+            sql += " from information_schema.COLUMNS c LEFT JOIN information_schema.TABLES t ON t.TABLE_NAME=c.TABLE_NAME WHERE c.TABLE_CATALOG='{0}';";
             sql = string.Format(sql, database);
 
             List<Table> tbList = new List<Table>();
@@ -51,7 +51,7 @@ namespace Model.Common
                 {
                     var db = reader["TABLE_SCHEMA"].ToString();
                     var tableName = reader["TABLE_NAME"].ToString();
-                    var type = Convert.ToInt32(reader["TYPE"]);
+                    var type = reader["TABLE_TYPE"].ToString() == "BASE TABLE" ? (int)TableType.DataTable : (int)TableType.DataView;
                     var tableCatalog = reader["TABLE_CATALOG"].ToString();
                     Table tb = tbList.FirstOrDefault(m => m.DatabaseName == db && m.TableName == tableName);
                     if (tb == null)

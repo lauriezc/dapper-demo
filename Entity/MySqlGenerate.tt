@@ -52,6 +52,17 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
 	foreach(var item in tables)
 	{
+		if(item.TableName=="all_test")
+        {
+        }
+		
+			var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);
+			if(primaryKey == null&&item.Type == (int)Model.Common.Entity.TableType.DataTable)
+            {
+				continue;
+            }			
+			var primary = primaryKey!=null?primaryKey.Name:"";
+
 #>
 	public class <#=item.TableName #>
 	{
@@ -75,8 +86,11 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 	public static class <#=item.TableName #>Exten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["<#=db.DataBaseName #>"].ToString();
-		
-		public static int Insert(this <#=item.TableName #> entity)
+<#
+		if(item.Type==(int)Model.Common.Entity.TableType.DataTable)
+        {
+#>
+public static int Insert(this <#=item.TableName #> entity)
 		{
 <#
 			var fields = item.Columns.Where(m=>!m.IsAutoIncrease).Select(m=>m.Name).ToArray();
@@ -140,34 +154,16 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		}
 
 		
-		public static <#=item.TableName #> GetModel(string where, string orderByField)
-		{
-			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
-			using(var con = new MySqlConnection(_connectionString))
-			{
-				try {
-					return con.QueryFirst<<#=item.TableName #>>(sql);
-				}
-				catch(Exception e)
-				{
-					if(con.State != ConnectionState.Closed)
-					{
-						con.Close();
-					}
-					return null;
-				}
-			}
-		}
-
 <#
-			var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);			
-			var primary = primaryKey!=null?primaryKey.Name:"";
+		if(primaryKey!=null)
+        {
+			
 			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
-			if(primaryKey!=null)
-            {
-				var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
-
+			var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
 #>
+		
+		
+
 		public static int Update(this <#=item.TableName #> entity)
 		{
 			string sql="UPDATE <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> SET <#=string.Join(",",updateFields) #> WHERE <#=string.Format("{0}=@{0}",primary) #>;";
@@ -322,8 +318,6 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 			}
 		}
-
-
 		public static <#=item.TableName #> GetModel(object primaryKey)
 		{
 			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE <#=string.Format("{0}=@{0}", primary) #>;");		
@@ -345,6 +339,32 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			}
 		}
 		
+
+<#
+            }//if(primaryKey!=null)
+        }//if(item.Type==(int)Model.Common.Entity.TableType.DataTable)
+#>
+
+		public static <#=item.TableName #> GetModel(string where, string orderByField)
+		{
+			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1};", where, orderByField);		
+			using(var con = new MySqlConnection(_connectionString))
+			{
+				try {
+					return con.QueryFirst<<#=item.TableName #>>(sql);
+				}
+				catch(Exception e)
+				{
+					if(con.State != ConnectionState.Closed)
+					{
+						con.Close();
+					}
+					return null;
+				}
+			}
+		}
+		
+		
 		public static List<<#=item.TableName #>> GetList(string where)
 		{
 			string sql = string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);		
@@ -364,7 +384,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 			}
 		}
 
-		public static Pager GetPageList(int pageIndex, int pageSize, string where="1=1", string orderField="<#=primary #> DESC")
+		public static Pager GetPageList(int pageIndex, int pageSize,  string orderField<#=primaryKey==null?"":string.Format("=\"{0} DESC\"", primary) #>, string where="1=1")
 		{
 			string sql=string.Format("SELECT * FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0} ORDER BY {1} LIMIT {2},{3}",where, orderField, (pageIndex-1)* pageSize, pageSize);
 			string countSql=string.Format("SELECT COUNT(0) FROM <#=Formater.ForamtDbName(item.DatabaseName, db.DbType) #>.<#=Formater.ForamtDbName(item.TableName,db.DbType) #> WHERE {0};", where);
@@ -391,9 +411,6 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 				}
 			}
 		}
-	<#
-	}
-	#>
     }
 <#
 	}
