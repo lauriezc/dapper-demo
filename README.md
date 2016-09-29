@@ -10,7 +10,7 @@ database access methods based on [dapper-dot-net](https://github.com/StackExchan
 
 <table>
 <tr>
-<td></td>
+<td>objects</td>
 <td>C</td>
 <td>R</td>
 <td>U</td>
@@ -38,6 +38,6 @@ database access methods based on [dapper-dot-net](https://github.com/StackExchan
     <td>F</td>
 </tr>
 </table>
+(T for TRUE,and F for FALSE)
 
-
-if you wanna run the tests, execute the sql file in the folder of this sln.And replace the the connection string in T4 template file and the app.config file in test prj.
+if you wanna run the tests, execute the sql file in the folder of this sln.And replace the the connection string in T4 template file and the app.config file in test project.
