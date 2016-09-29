@@ -144,7 +144,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
 		if(primaryKey!=null)
         {
-			//是原始表格且有主键时，生成update，delete，getmodel等方法
+			//是原始表格且有主键或者自增字段时，生成update，delete，getmodel等方法
 			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
 			var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
 #>

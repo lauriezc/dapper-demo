@@ -52,10 +52,6 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 <#
 	foreach(var item in tables)
 	{
-		if(item.TableName=="all_test")
-        {
-        }
-		
 			var primaryKey=item.Columns.FirstOrDefault(m=>m.IsPrimaryKey||m.IsAutoIncrease);
 			if(primaryKey == null&&item.Type == (int)Model.Common.Entity.TableType.DataTable)
             {
@@ -90,7 +86,7 @@ namespace Entity.<#=db.NameSpace.Replace("-","_") #>
 		if(item.Type==(int)Model.Common.Entity.TableType.DataTable)
         {
 #>
-public static int Insert(this <#=item.TableName #> entity)
+	public static int Insert(this <#=item.TableName #> entity)
 		{
 <#
 			var fields = item.Columns.Where(m=>!m.IsAutoIncrease).Select(m=>m.Name).ToArray();
@@ -157,7 +153,7 @@ public static int Insert(this <#=item.TableName #> entity)
 <#
 		if(primaryKey!=null)
         {
-			
+			//是原始表格且有主键或者自增字段时，生成update，delete，getmodel等方法
 			var updateFields=item.Columns.Where(m=>!m.IsPrimaryKey&&!m.IsAutoIncrease).Select(m=>string.Format("{0}=@{0}",m.Name)).ToArray();
 			var pkTypeName=new Model.Common.DataType().SqlDataType[primaryKey.DataType].ToString();
 #>

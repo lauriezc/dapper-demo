@@ -32,7 +32,7 @@ namespace Entity.dapper_test
 	public static class TestExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
-public static int Insert(this Test entity)
+	public static int Insert(this Test entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`Test` (name,Time)VALUES(@name,@Time);";
 			DynamicParameters para =new DynamicParameters();
@@ -437,7 +437,7 @@ public static int Insert(this Test entity)
 	public static class datatypeExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["dapper-test"].ToString();
-public static int Insert(this datatype entity)
+	public static int Insert(this datatype entity)
 		{
 			string sql="INSERT INTO `dapper-test`.`datatype` (bit,smallint,mediumint,int,integer,bigint,real,double,float,decimal,numeric,char,varchar,binary,varbinary,date,time,datetime,timestamp,year,tinyblob,blob,mediumblob,longblob,tinytext,text,mediumtext)VALUES(@bit,@smallint,@mediumint,@int,@integer,@bigint,@real,@double,@float,@decimal,@numeric,@char,@varchar,@binary,@varbinary,@date,@time,@datetime,@timestamp,@year,@tinyblob,@blob,@mediumblob,@longblob,@tinytext,@text,@mediumtext);";
 			DynamicParameters para =new DynamicParameters();
@@ -866,7 +866,7 @@ namespace Entity.cms
 	public static class cms_articlesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_articles entity)
+	public static int Insert(this cms_articles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_articles` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -1201,7 +1201,7 @@ public static int Insert(this cms_articles entity)
 	public static class cms_articles_copyExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_articles_copy entity)
+	public static int Insert(this cms_articles_copy entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_articles_copy` (title,sub_title,content,source,from,category,enabled,created_at,updated_at)VALUES(@title,@sub_title,@content,@source,@from,@category,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -1534,7 +1534,7 @@ public static int Insert(this cms_articles_copy entity)
 	public static class cms_categoriesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_categories entity)
+	public static int Insert(this cms_categories entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_categories` (name,description,weight,parent_id,enabled,created_at,updated_at)VALUES(@name,@description,@weight,@parent_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -1863,7 +1863,7 @@ public static int Insert(this cms_categories entity)
 	public static class cms_modulesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_modules entity)
+	public static int Insert(this cms_modules entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_modules` (name,uri,controller,action,type,icon,parent_id,weight,enabled,created_at,updated_at)VALUES(@name,@uri,@controller,@action,@type,@icon,@parent_id,@weight,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -2203,7 +2203,7 @@ public static int Insert(this cms_modules entity)
 	public static class cms_rolesExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_roles entity)
+	public static int Insert(this cms_roles entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_roles` (name,weight,enabled,module_id,created_at,updated_at)VALUES(@name,@weight,@enabled,@module_id,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
@@ -2524,7 +2524,7 @@ public static int Insert(this cms_roles entity)
 	public static class cms_usersExten
 	{
 		private static string _connectionString = ConfigurationManager.ConnectionStrings["cms"].ToString();
-public static int Insert(this cms_users entity)
+	public static int Insert(this cms_users entity)
 		{
 			string sql="INSERT INTO `cms`.`cms_users` (user_name,password,real_name,role_id,enabled,created_at,updated_at)VALUES(@user_name,@password,@real_name,@role_id,@enabled,@created_at,@updated_at);";
 			DynamicParameters para =new DynamicParameters();
